@@ -3,6 +3,10 @@ body {
 }
 
 
+p {
+	font-size: 1.5em;
+}
+
 #needpin {
 	display: none;
 	margin: auto;
@@ -60,8 +64,9 @@ body {
 	padding: 20px;
 	margin: 5%;
 	border: medium solid #000000;
-	width: 7px;
-	height: 7px;
+	width: 30px;
+	height: 30px;
+	font-size:1.5em;
 	text-align: center;
 	vertical-align: middle;
 }
@@ -87,12 +92,12 @@ body {
 
 .win {
 	background-color: green;
-	color: darkgreen;
+	color: white;
 }
 
 .tie {
 	background-color: blue;
-	color: darkblue;
+	color: white;
 }
 
 .lose {
