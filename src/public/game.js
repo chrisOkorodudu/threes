@@ -5,7 +5,7 @@ pinsRemaining = 5;
 computerTotal = 0;
 playerTotal = 0;
 
-
+i= 0;
 
 
 document.addEventListener('DOMContentLoaded', init);
@@ -34,49 +34,85 @@ function Go() {
 	const diceValues = ((userInput.length>0) ? userInput.split(',') : []);
 
 	genComputerScore(computer, diceValues);
+	
 
 	initGameUI();
 	const game = document.getElementById('game');
+	var compScore = document.createElement('p');
+	compScore.id = 'compScore';
+	game.appendChild(compScore);
+
+
 	const startButton = document.getElementById('start');
 	var rollButton = document.getElementById('roll');
 	const pinButton = document.getElementById('pin');
+	const resetButton = document.getElementById('reset');
 	const dice = document.getElementById('container').childNodes;
-	
+	var results = document.createElement('p');
 
 	//creating overlay that will display message conent if 
 	//user tries to make illegal move
 	var overlay = document.createElement('div');
 	overlay.id = 'overlay';
-	var dismissButton = document.createElement('button');
-	dismissButton.textContent = 'Ok. Got it!';
-	overlay.appendChild(dismissButton);
-	console.log(dismissButton);
 	var body = document.querySelector('body');
 	body.appendChild(overlay);
+
+
+//OVERLAY CONTENT
+	var needpin = document.createElement('div');
+	needpin.textContent = 'You must pin at least one die to continue';
+	overlay.appendChild(needpin);
+	needpin.id = 'needpin';
+	
+	var mustroll = document.createElement('div');
+	mustroll.textContent = 'You must roll before you can select a die to pin';
+	overlay.appendChild(mustroll);
+	mustroll.id = 'mustroll';
+
+	var dismissButton = document.createElement('button');
+	dismissButton.textContent = 'Ok. Got it!';
+	dismissButton.id = 'dismiss';
+	overlay.appendChild(dismissButton);
+	dismissButton.addEventListener('click', () => {
+		overlay.style.display = 'none';
+		needpin.style.display = 'none';
+		mustroll.style.display = 'none';
+	});
+
 
 	let playerScore = document.createElement('p');
 	playerScore.id = 'player';
 
 
-
+//START BUTTON CLICK EVENT HANDLER
 	startButton.addEventListener('click', () => {
 		displayComputerScore();	
 		game.appendChild(playerScore);
 		displayPlayerScore(dice);
 		
+		playerScore.style.display = 'block';
+		compScore.style.display = 'block';
 		startButton.disabled = true;
 		rollButton.disabled = false;
 	});
 
 
+//DICE CLICK EVENT HANDLERS
 	dice.forEach((die) => {
 		die.addEventListener('click', () => {
-			if (!die.classList.contains('pinned')) {
+			if (rollButton.disabled === false || startButton.disabled === false) {
+				overlay.style.display = 'block';
+				console.log(mustroll);
+				mustroll.style.display = 'block';
+			}
+			else if (!die.classList.contains('pinned')) {
 				die.classList.toggle('pin');
 			}
 		});
 	});
 
+
+//ROLL BUTTON EVENT HANDLER 
 	rollButton.addEventListener('click', () => {
 		playerRoll(diceValues, pinsRemaining);
 		rollButton.disabled = true;
@@ -88,6 +124,9 @@ function Go() {
 	const message = document.createElement('p');
 	game.appendChild(message);
 
+
+
+//PIN BUTTON CLICK EVENT HANDLER 
 	pinButton.addEventListener('click', () => {
 		onePinned = false;
 		dice.forEach((die) => {
@@ -111,17 +150,16 @@ function Go() {
 			rollButton.disabled = false;
 
 		} else {
-			overlay.textContent = 'You must pin at leat one die to continue';
 			overlay.style.display = 'block';
-			console.log('here');
+			needpin.style.display = 'block';
 		}
 		displayPlayerScore(dice);
 
-		var results = document.createElement('p');
+		
 		results.id = 'results';
-		if (pinsRemaining === 0) {
 
-			console.log(playerTotal, computerTotal);
+		//if game is over 
+		if (pinsRemaining === 0) {
 
 			if (playerTotal < computerTotal) {
 				results.classList.add('win');
@@ -133,8 +171,38 @@ function Go() {
 				results.classList.add('lose');
 				results.textContent = 'Sorry, you lose!';
 			}
+			results.style.display = 'block';
+
+			rollButton.disabled = true;
+			resetButton.disabled = false;
+			game.appendChild(results);
 		}
-		game.appendChild(results);
+	});
+
+
+//RESET BUTTON CLICK EVENT HANDLER
+	resetButton.addEventListener('click', () => {
+		pinsRemaining = 5;
+		computer = [];
+		startButton.disabled = false;
+		rollButton.disabled = true;
+		pinButton.disabled = true;
+		genComputerScore(computer, diceValues);
+		coputerTotal = 0;
+		playerTotal = 0;
+
+		console.log(i, dice);
+		dice.forEach((die) => {
+			die.classList.toggle('pinned');
+			die.textContent = "";
+		});
+		console.log(dice);
+		i++
+		results.style.display = 'none';
+
+		compScore.style.display = 'none';
+		playerScore.style.display = 'none';
+		resetButton.disabled = true;
 	});
 }
 
@@ -142,7 +210,7 @@ function Go() {
 function playerRoll(diceValues, pinsRemaining) {
 	roll = []
 	if (diceValues.length >= pinsRemaining) {
-		roll.push(diceValues.splice(0, pinsRemaining));
+		roll = diceValues.splice(0, pinsRemaining);
 	} else {
 		for (let i=0; i<(pinsRemaining-diceValues.length); i++) {
 			roll.push(Math.floor(Math.random() * Math.floor(6)) + 1);
@@ -169,7 +237,10 @@ function displayPlayerScore(dice) {
 	score = 0;
 	dice.forEach((die) => {
 		if (die.classList.contains('pinned')) {
-			score += parseInt(die.textContent);
+			val = parseInt(die.textContent);
+			if (val !== 3) {
+				score += val;
+			}
 		}
 	});
 
@@ -181,9 +252,7 @@ function displayPlayerScore(dice) {
 
 
 function displayComputerScore() {
-	var game = document.getElementById('game');
-
-	var compScore = document.createElement('p');
+	compScore = document.getElementById('compScore');
 	let total = 0;
 	let cScore = "Computer Score: ";
 	for (let i=0; i<computer.length; i++) {
@@ -206,7 +275,6 @@ function displayComputerScore() {
 	computerTotal = total;
 
 	compScore.textContent = cScore;
-	game.appendChild(compScore);	
 }
 
 
@@ -245,6 +313,13 @@ function initGameUI() {
 	pin.disabled = true;
 	pin.id = 'pin';
 	buttons.appendChild(pin);
+
+	//option to restart game
+	var resetButton = document.createElement('button');
+	resetButton.textContent = 'Reset';
+	resetButton.disabled = true;
+	resetButton.id = 'reset';
+	buttons.appendChild(resetButton);
 
 	game.appendChild(buttons);
 }
